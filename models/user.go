@@ -33,6 +33,21 @@ func GetUserByEmail(email string) (*User, error) {
 	return &user, nil
 }
 
+func (u *User) Login() error {
+	foundUser, err := GetUserByEmail(u.Email)
+	if err != nil || foundUser == nil {
+		return fmt.Errorf("Invalid credentials")
+	}
+
+	validPassword := utils.CheckPasswordHash(u.Password, foundUser.Password)
+
+	if !validPassword {
+		return fmt.Errorf("Invalid credentials")
+	}
+
+	return nil
+}
+
 func (u *User) Save() error {
 	query := `
 		INSERT INTO users(email, password) 

@@ -41,3 +41,24 @@ func signup(ctx *gin.Context) {
 		"user":    user,
 	})
 }
+
+func login(ctx *gin.Context) {
+	var user models.User
+	if err := ctx.ShouldBindJSON(&user); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"message": fmt.Sprintf("Could not parse user data: %v", err),
+		})
+		return
+	}
+
+	if err := user.Login(); err != nil {
+		ctx.JSON(http.StatusUnauthorized, gin.H{
+			"message": fmt.Sprintf("Could not authenticate user: %v", err),
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"message": "Login Successful",
+	})
+}
