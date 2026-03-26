@@ -1,6 +1,7 @@
 package models
 
 import (
+	"database/sql"
 	"fmt"
 	"time"
 
@@ -69,4 +70,26 @@ func GetAllEvents() ([]Event, error) {
 	}
 
 	return events, nil
+}
+
+func GetEventByID(id int64) (*Event, error) {
+	query := "SELECT * FROM events WHERE id = ?"
+	row := db.DB.QueryRow(query, id)
+
+	var event Event
+	if err := row.Scan(
+		&event.ID,
+		&event.Name,
+		&event.Description,
+		&event.Location,
+		&event.DateTime,
+		&event.UserID,
+	); err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("Could not get event: %v", err)
+	}
+
+	return &event, nil
 }
