@@ -17,30 +17,6 @@ type Event struct {
 	UserID      int64
 }
 
-func (e *Event) Save() error {
-	query := `
-		INSERT INTO events(name, description, location, dateTime, user_id) 
-		VALUES (?, ?, ?, ?, ?)
-	`
-	stmt, err := db.DB.Prepare(query)
-	if err != nil {
-		return fmt.Errorf("Could not prepare statement for saving event: %v", err)
-	}
-
-	result, err := stmt.Exec(e.Name, e.Description, e.Location, e.DateTime, e.UserID)
-	if err != nil {
-		return fmt.Errorf("Could not execute statement for saving event: %v", err)
-	}
-	defer stmt.Close()
-
-	e.ID, err = result.LastInsertId()
-	if err != nil {
-		return fmt.Errorf("Could not get last inserted id for saved event: %v", err)
-	}
-
-	return nil
-}
-
 func GetAllEvents() ([]Event, error) {
 	query := "SELECT * FROM events"
 
@@ -92,4 +68,50 @@ func GetEventByID(id int64) (*Event, error) {
 	}
 
 	return &event, nil
+}
+
+func (e *Event) Save() error {
+	query := `
+		INSERT INTO events(name, description, location, dateTime, user_id) 
+		VALUES (?, ?, ?, ?, ?)
+	`
+
+	stmt, err := db.DB.Prepare(query)
+	if err != nil {
+		return fmt.Errorf("Could not prepare statement for saving event: %v", err)
+	}
+	defer stmt.Close()
+
+	result, err := stmt.Exec(e.Name, e.Description, e.Location, e.DateTime, e.UserID)
+	if err != nil {
+		return fmt.Errorf("Could not execute statement for saving event: %v", err)
+	}
+
+	e.ID, err = result.LastInsertId()
+	if err != nil {
+		return fmt.Errorf("Could not get last inserted id for saved event: %v", err)
+	}
+
+	return nil
+}
+
+func (e *Event) Update() error {
+	query := `
+		UPDATE events
+		SET name = ?, description = ?, location = ?, dateTime = ? 
+		WHERE id = ?
+	`
+
+	stmt, err := db.DB.Prepare(query)
+	if err != nil {
+		return fmt.Errorf("Could not prepare statement for updating event: %v", err)
+	}
+	defer stmt.Close()
+
+	_, err = stmt.Exec(e.Name, e.Description, e.Location, e.DateTime, e.ID)
+	if err != nil {
+		return fmt.Errorf("Could not execute statement for updating event: %v", err)
+	}
+
+	return nil
 }
