@@ -115,3 +115,23 @@ func (e *Event) Update() error {
 
 	return nil
 }
+
+func (e *Event) Delete() error {
+	query := `
+		DELETE FROM events
+		WHERE id = ?
+	`
+
+	stmt, err := db.DB.Prepare(query)
+	if err != nil {
+		return fmt.Errorf("Could not prepare statement for deleting event: %v", err)
+	}
+	defer stmt.Close()
+
+	_, err = stmt.Exec(e.ID)
+	if err != nil {
+		return fmt.Errorf("Could not execute statement for deleting event: %v", err)
+	}
+
+	return nil
+}
