@@ -97,7 +97,10 @@ func (e *Event) Save(userId int64) error {
 	return nil
 }
 
-func (e *Event) Update() error {
+func (e *Event) Update(eventId, userId int64) error {
+	e.ID = eventId
+	e.UserID = userId
+
 	query := `
 		UPDATE events
 		SET name = ?, description = ?, location = ?, dateTime = ? 
