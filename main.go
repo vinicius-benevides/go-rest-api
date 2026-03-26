@@ -5,11 +5,15 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/vinicius-benevides/go-rest-api/db"
 	"github.com/vinicius-benevides/go-rest-api/models"
 )
 
 func main() {
 	server := gin.Default()
+	if err := db.Init(); err != nil {
+		panic(err)
+	}
 
 	server.GET("/events", getEvents)
 	server.POST("/events", createEvent)
