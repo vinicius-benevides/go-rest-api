@@ -22,6 +22,18 @@ func Init() error {
 }
 
 func createTables() error {
+	createUsersTable := `
+		CREATE TABLE IF NOT EXISTS users (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			email TEXT NOT NULL UNIQUE,
+			password TEXT NOT NULL
+		)
+	`
+
+	if _, err := DB.Exec(createUsersTable); err != nil {
+		return fmt.Errorf("Could not create users table: %v", err)
+	}
+
 	createEventsTable := `
 		CREATE TABLE IF NOT EXISTS events (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -29,7 +41,8 @@ func createTables() error {
 			description TEXT NOT NULL,
 			location TEXT NOT NULL,
 			dateTime DATETIME NOT NULL,
-			user_id INTEGER
+			user_id INTEGER,
+			FOREIGN KEY (user_id) REFERENCES users(id)
 		)
 	`
 
