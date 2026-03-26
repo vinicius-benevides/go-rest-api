@@ -33,19 +33,24 @@ func GetUserByEmail(email string) (*User, error) {
 	return &user, nil
 }
 
-func (u *User) Login() error {
+func (u *User) Login() (string, error) {
 	foundUser, err := GetUserByEmail(u.Email)
 	if err != nil || foundUser == nil {
-		return fmt.Errorf("Invalid credentials")
+		return "", fmt.Errorf("Invalid credentials: %v", err)
 	}
 
 	validPassword := utils.CheckPasswordHash(u.Password, foundUser.Password)
 
 	if !validPassword {
-		return fmt.Errorf("Invalid credentials")
+		return "", fmt.Errorf("Invalid credentials: %v", err)
 	}
 
-	return nil
+	token, err := utils.GenerateToken(foundUser.ID, foundUser.Email)
+	if err != nil {
+		return "", fmt.Errorf("Invalid credentials: %v", err)
+	}
+
+	return token, nil
 }
 
 func (u *User) Save() error {

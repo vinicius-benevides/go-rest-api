@@ -51,7 +51,8 @@ func login(ctx *gin.Context) {
 		return
 	}
 
-	if err := user.Login(); err != nil {
+	token, err := user.Login()
+	if err != nil {
 		ctx.JSON(http.StatusUnauthorized, gin.H{
 			"message": fmt.Sprintf("Could not authenticate user: %v", err),
 		})
@@ -60,5 +61,6 @@ func login(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, gin.H{
 		"message": "Login Successful",
+		"token":   token,
 	})
 }
