@@ -17,6 +17,18 @@ func signup(ctx *gin.Context) {
 		return
 	}
 
+	if existingUser, err := models.GetUserByEmail(user.Email); err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"message": fmt.Sprintf("Could not verify user: %v", err),
+		})
+		return
+	} else if existingUser != nil {
+		ctx.JSON(http.StatusConflict, gin.H{
+			"message": "Email already registered",
+		})
+		return
+	}
+
 	if err := user.Save(); err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"message": fmt.Sprintf("Could not create user: %v", err),
