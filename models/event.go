@@ -70,7 +70,9 @@ func GetEventByID(id int64) (*Event, error) {
 	return &event, nil
 }
 
-func (e *Event) Save() error {
+func (e *Event) Save(userId int64) error {
+	e.UserID = userId
+
 	query := `
 		INSERT INTO events(name, description, location, dateTime, user_id) 
 		VALUES (?, ?, ?, ?, ?)

@@ -1,5 +1,6 @@
 POST http://localhost:8080/events
 Content-Type: application/json
+Authorization: <JWT TOKEN>
 
 {
     "name": "Test event",
