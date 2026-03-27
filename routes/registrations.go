@@ -1,59 +1,24 @@
 package routes
 
 import (
-	"fmt"
 	"net/http"
-	"slices"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
-	"github.com/vinicius-benevides/go-rest-api/repositories"
+	"github.com/vinicius-benevides/go-rest-api/services"
 )
+
+var registrationService = services.NewRegistrationService()
 
 func createRegistration(ctx *gin.Context) {
 	userId := ctx.GetInt64("userId")
-	eventId, err := strconv.ParseInt(ctx.Param("id"), 10, 64)
+	eventId, err := getIDParam(ctx, "id", "event id")
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"message": fmt.Sprintf("Could not parse event id: %v", err),
-		})
+		respondError(ctx, err)
 		return
 	}
 
-	event, err := repositories.GetEventByID(eventId)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"message": fmt.Sprintf("Could not get event: %v", err),
-		})
-		return
-	}
-
-	if event == nil {
-		ctx.JSON(http.StatusNotFound, gin.H{
-			"message": "Event not found",
-		})
-		return
-	}
-
-	users, err := repositories.GetRegistrationsByEvent(event.ID)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"message": fmt.Sprintf("Could not get current registrations: %v", err),
-		})
-		return
-	}
-
-	if slices.Contains(users, userId) {
-		ctx.JSON(http.StatusConflict, gin.H{
-			"message": "User already registered for this event",
-		})
-		return
-	}
-
-	if err := repositories.CreateRegistration(event.ID, userId); err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"message": fmt.Sprintf("Could not register for event: %v", err),
-		})
+	if err := registrationService.RegisterUser(eventId, userId); err != nil {
+		respondError(ctx, err)
 		return
 	}
 
@@ -64,48 +29,14 @@ func createRegistration(ctx *gin.Context) {
 
 func cancelRegistration(ctx *gin.Context) {
 	userId := ctx.GetInt64("userId")
-	eventId, err := strconv.ParseInt(ctx.Param("id"), 10, 64)
+	eventId, err := getIDParam(ctx, "id", "event id")
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"message": fmt.Sprintf("Could not parse event id: %v", err),
-		})
+		respondError(ctx, err)
 		return
 	}
 
-	event, err := repositories.GetEventByID(eventId)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"message": fmt.Sprintf("Could not get event: %v", err),
-		})
-		return
-	}
-
-	if event == nil {
-		ctx.JSON(http.StatusNotFound, gin.H{
-			"message": "Event not found",
-		})
-		return
-	}
-
-	users, err := repositories.GetRegistrationsByEvent(event.ID)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"message": fmt.Sprintf("Could not get current registrations: %v", err),
-		})
-		return
-	}
-
-	if !slices.Contains(users, userId) {
-		ctx.JSON(http.StatusOK, gin.H{
-			"message": "User is not registered for this event",
-		})
-		return
-	}
-
-	if err := repositories.CancelRegistration(event.ID, userId); err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"message": fmt.Sprintf("Could not cancel registration for event: %v", err),
-		})
+	if err := registrationService.CancelRegistration(eventId, userId); err != nil {
+		respondError(ctx, err)
 		return
 	}
 

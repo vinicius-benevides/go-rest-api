@@ -2,10 +2,10 @@ package repositories
 
 import (
 	"database/sql"
-	"fmt"
 
 	"github.com/vinicius-benevides/go-rest-api/db"
 	"github.com/vinicius-benevides/go-rest-api/models"
+	"github.com/vinicius-benevides/go-rest-api/pkg/errs"
 )
 
 func GetAllEvents() ([]models.Event, error) {
@@ -13,7 +13,7 @@ func GetAllEvents() ([]models.Event, error) {
 
 	rows, err := db.DB.Query(query)
 	if err != nil {
-		return nil, fmt.Errorf("Could not get all events: %v", err)
+		return nil, errs.InternalError("Could not get events", err)
 	}
 	defer rows.Close()
 
@@ -29,7 +29,7 @@ func GetAllEvents() ([]models.Event, error) {
 			&event.DateTime,
 			&event.UserID,
 		); err != nil {
-			return nil, fmt.Errorf("Could not get all events: %v", err)
+			return nil, errs.InternalError("Could not get events", err)
 		}
 
 		events = append(events, event)
@@ -52,9 +52,9 @@ func GetEventByID(id int64) (*models.Event, error) {
 		&event.UserID,
 	); err != nil {
 		if err == sql.ErrNoRows {
-			return nil, nil
+			return nil, errs.NotFoundError("Event not found")
 		}
-		return nil, fmt.Errorf("Could not get event: %v", err)
+		return nil, errs.InternalError("Could not get event", err)
 	}
 
 	return &event, nil
@@ -68,18 +68,18 @@ func CreateEvent(event *models.Event) error {
 
 	stmt, err := db.DB.Prepare(query)
 	if err != nil {
-		return fmt.Errorf("Could not prepare statement for saving event: %v", err)
+		return errs.InternalError("Could not create event", err)
 	}
 	defer stmt.Close()
 
 	result, err := stmt.Exec(event.Name, event.Description, event.Location, event.DateTime, event.UserID)
 	if err != nil {
-		return fmt.Errorf("Could not execute statement for saving event: %v", err)
+		return errs.InternalError("Could not create event", err)
 	}
 
 	event.ID, err = result.LastInsertId()
 	if err != nil {
-		return fmt.Errorf("Could not get last inserted id for saved event: %v", err)
+		return errs.InternalError("Could not create event", err)
 	}
 
 	return nil
@@ -94,12 +94,12 @@ func UpdateEvent(event *models.Event) error {
 
 	stmt, err := db.DB.Prepare(query)
 	if err != nil {
-		return fmt.Errorf("Could not prepare statement for updating event: %v", err)
+		return errs.InternalError("Could not update event", err)
 	}
 	defer stmt.Close()
 
 	if _, err = stmt.Exec(event.Name, event.Description, event.Location, event.DateTime, event.ID); err != nil {
-		return fmt.Errorf("Could not execute statement for updating event: %v", err)
+		return errs.InternalError("Could not update event", err)
 	}
 
 	return nil
@@ -113,12 +113,12 @@ func DeleteEvent(id int64) error {
 
 	stmt, err := db.DB.Prepare(query)
 	if err != nil {
-		return fmt.Errorf("Could not prepare statement for deleting event: %v", err)
+		return errs.InternalError("Could not delete event", err)
 	}
 	defer stmt.Close()
 
 	if _, err = stmt.Exec(id); err != nil {
-		return fmt.Errorf("Could not execute statement for deleting event: %v", err)
+		return errs.InternalError("Could not delete event", err)
 	}
 
 	return nil

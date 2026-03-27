@@ -2,11 +2,10 @@ package repositories
 
 import (
 	"database/sql"
-	"fmt"
 
 	"github.com/vinicius-benevides/go-rest-api/db"
 	"github.com/vinicius-benevides/go-rest-api/models"
-	"github.com/vinicius-benevides/go-rest-api/utils"
+	"github.com/vinicius-benevides/go-rest-api/pkg/errs"
 )
 
 func GetUserByEmail(email string) (*models.User, error) {
@@ -20,9 +19,9 @@ func GetUserByEmail(email string) (*models.User, error) {
 		&user.Password,
 	); err != nil {
 		if err == sql.ErrNoRows {
-			return nil, nil
+			return nil, errs.NotFoundError("User not found")
 		}
-		return nil, fmt.Errorf("Could not get user: %v", err)
+		return nil, errs.InternalError("Could not get user", err)
 	}
 
 	return &user, nil
@@ -36,26 +35,19 @@ func CreateUser(user *models.User) error {
 
 	stmt, err := db.DB.Prepare(query)
 	if err != nil {
-		return fmt.Errorf("Could not prepare statement for saving user: %v", err)
+		return errs.InternalError("Could not create user", err)
 	}
 	defer stmt.Close()
 
-	user.Password, err = utils.HashPassword(user.Password)
-	if err != nil {
-		return fmt.Errorf("Could not hash user password: %v", err)
-	}
-
 	result, err := stmt.Exec(user.Email, user.Password)
 	if err != nil {
-		return fmt.Errorf("Could not execute statement for saving user: %v", err)
+		return errs.InternalError("Could not create user", err)
 	}
 
 	user.ID, err = result.LastInsertId()
 	if err != nil {
-		return fmt.Errorf("Could not get last inserted id for saved user: %v", err)
+		return errs.InternalError("Could not create user", err)
 	}
-
-	user.Password = ""
 
 	return nil
 }

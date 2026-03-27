@@ -1,9 +1,8 @@
 package repositories
 
 import (
-	"fmt"
-
 	"github.com/vinicius-benevides/go-rest-api/db"
+	"github.com/vinicius-benevides/go-rest-api/pkg/errs"
 )
 
 func GetRegistrationsByEvent(eventID int64) ([]int64, error) {
@@ -11,7 +10,7 @@ func GetRegistrationsByEvent(eventID int64) ([]int64, error) {
 
 	rows, err := db.DB.Query(query, eventID)
 	if err != nil {
-		return nil, fmt.Errorf("Could not get registrations: %v", err)
+		return nil, errs.InternalError("Could not get registrations", err)
 	}
 	defer rows.Close()
 
@@ -19,7 +18,7 @@ func GetRegistrationsByEvent(eventID int64) ([]int64, error) {
 	for rows.Next() {
 		var userID int64
 		if err = rows.Scan(&userID); err != nil {
-			return nil, fmt.Errorf("Could not get registrations: %v", err)
+			return nil, errs.InternalError("Could not get registrations", err)
 		}
 		users = append(users, userID)
 	}
@@ -32,12 +31,12 @@ func CreateRegistration(eventID, userID int64) error {
 
 	stmt, err := db.DB.Prepare(query)
 	if err != nil {
-		return fmt.Errorf("Could not prepare statement for creating registration for event: %v", err)
+		return errs.InternalError("Could not create registration", err)
 	}
 	defer stmt.Close()
 
 	if _, err = stmt.Exec(eventID, userID); err != nil {
-		return fmt.Errorf("Could not execute statement for creating registration for event: %v", err)
+		return errs.InternalError("Could not create registration", err)
 	}
 
 	return nil
@@ -48,12 +47,12 @@ func CancelRegistration(eventID, userID int64) error {
 
 	stmt, err := db.DB.Prepare(query)
 	if err != nil {
-		return fmt.Errorf("Could not prepare statement for canceling registration for event: %v", err)
+		return errs.InternalError("Could not cancel registration", err)
 	}
 	defer stmt.Close()
 
 	if _, err = stmt.Exec(eventID, userID); err != nil {
-		return fmt.Errorf("Could not execute statement for canceling registration for event: %v", err)
+		return errs.InternalError("Could not cancel registration", err)
 	}
 
 	return nil

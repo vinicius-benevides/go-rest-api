@@ -1,21 +1,20 @@
 package routes
 
 import (
-	"fmt"
 	"net/http"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/vinicius-benevides/go-rest-api/models"
-	"github.com/vinicius-benevides/go-rest-api/repositories"
+	"github.com/vinicius-benevides/go-rest-api/pkg/errs"
+	"github.com/vinicius-benevides/go-rest-api/services"
 )
 
+var eventService = services.NewEventService()
+
 func getEvents(ctx *gin.Context) {
-	events, err := repositories.GetAllEvents()
+	events, err := eventService.ListEvents()
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"message": fmt.Sprintf("Could not get events: %v", err),
-		})
+		respondError(ctx, err)
 		return
 	}
 
@@ -23,26 +22,15 @@ func getEvents(ctx *gin.Context) {
 }
 
 func getEventByID(ctx *gin.Context) {
-	eventId, err := strconv.ParseInt(ctx.Param("id"), 10, 64)
+	eventId, err := getIDParam(ctx, "id", "event id")
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"message": fmt.Sprintf("Could not parse event id: %v", err),
-		})
+		respondError(ctx, err)
 		return
 	}
 
-	event, err := repositories.GetEventByID(eventId)
+	event, err := eventService.GetEvent(eventId)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"message": fmt.Sprintf("Could not get event: %v", err),
-		})
-		return
-	}
-
-	if event == nil {
-		ctx.JSON(http.StatusNotFound, gin.H{
-			"message": "Event not found",
-		})
+		respondError(ctx, err)
 		return
 	}
 
@@ -52,118 +40,59 @@ func getEventByID(ctx *gin.Context) {
 func createEvent(ctx *gin.Context) {
 	var event models.Event
 	if err := ctx.ShouldBindJSON(&event); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"message": fmt.Sprintf("Could not parse event data: %v", err),
-		})
+		respondError(ctx, errs.BadRequestError("Invalid event payload"))
 		return
 	}
 
 	userId := ctx.GetInt64("userId")
-	event.UserID = userId
-	if err := repositories.CreateEvent(&event); err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"message": fmt.Sprintf("Could not create event: %v", err),
-		})
+	created, err := eventService.CreateEvent(userId, event)
+	if err != nil {
+		respondError(ctx, err)
 		return
 	}
 
 	ctx.JSON(http.StatusCreated, gin.H{
 		"message": "Event created",
-		"event":   event,
+		"event":   created,
 	})
 }
 
 func updateEvent(ctx *gin.Context) {
-	eventId, err := strconv.ParseInt(ctx.Param("id"), 10, 64)
+	eventId, err := getIDParam(ctx, "id", "event id")
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"message": fmt.Sprintf("Could not parse event id: %v", err),
-		})
-		return
-	}
-
-	event, err := repositories.GetEventByID(eventId)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"message": fmt.Sprintf("Could not get event: %v", err),
-		})
-		return
-	}
-
-	if event == nil {
-		ctx.JSON(http.StatusNotFound, gin.H{
-			"message": "Event not found",
-		})
-		return
-	}
-
-	userId := ctx.GetInt64("userId")
-	if event.UserID != userId {
-		ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
-			"message": "Not authorized to update event",
-		})
+		respondError(ctx, err)
 		return
 	}
 
 	var updatedEvent models.Event
 	if err := ctx.ShouldBindJSON(&updatedEvent); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"message": fmt.Sprintf("Could not parse event data: %v", err),
-		})
+		respondError(ctx, errs.BadRequestError("Invalid event payload"))
 		return
 	}
 
-	updatedEvent.ID = eventId
-	updatedEvent.UserID = userId
-	if err := repositories.UpdateEvent(&updatedEvent); err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"message": fmt.Sprintf("Could not update event: %v", err),
-		})
+	userId := ctx.GetInt64("userId")
+	event, err := eventService.UpdateEvent(userId, eventId, updatedEvent)
+	if err != nil {
+		respondError(ctx, err)
 		return
 	}
 
 	ctx.JSON(http.StatusOK, gin.H{
 		"message": "Event updated",
-		"event":   updatedEvent,
+		"event":   event,
 	})
 }
 
 func deleteEvent(ctx *gin.Context) {
-	eventId, err := strconv.ParseInt(ctx.Param("id"), 10, 64)
+	eventId, err := getIDParam(ctx, "id", "event id")
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"message": fmt.Sprintf("Could not parse event id: %v", err),
-		})
-		return
-	}
-
-	event, err := repositories.GetEventByID(eventId)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"message": fmt.Sprintf("Could not get event: %v", err),
-		})
-		return
-	}
-
-	if event == nil {
-		ctx.JSON(http.StatusNotFound, gin.H{
-			"message": "Event not found",
-		})
+		respondError(ctx, err)
 		return
 	}
 
 	userId := ctx.GetInt64("userId")
-	if event.UserID != userId {
-		ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
-			"message": "Not authorized to delete event",
-		})
-		return
-	}
-
-	if err := repositories.DeleteEvent(event.ID); err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"message": fmt.Sprintf("Could not delete event: %v", err),
-		})
+	if err := eventService.DeleteEvent(userId, eventId); err != nil {
+		respondError(ctx, err)
 		return
 	}
 
