@@ -7,21 +7,31 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-var DB *sql.DB
-
-func Init() error {
-	var err error
-	if DB, err = sql.Open("sqlite3", "api.db"); err != nil {
-		return fmt.Errorf("Could not connect to database: %v", err)
-	}
-
-	DB.SetMaxOpenConns(10)
-	DB.SetMaxIdleConns(5)
-
-	return createTables()
+type Config struct {
+	Driver       string
+	DSN          string
+	MaxOpenConns int
+	MaxIdleConns int
 }
 
-func createTables() error {
+func NewConnection(cfg Config) (*sql.DB, error) {
+	connection, err := sql.Open(cfg.Driver, cfg.DSN)
+	if err != nil {
+		return nil, fmt.Errorf("Could not connect to database: %v", err)
+	}
+
+	connection.SetMaxOpenConns(cfg.MaxOpenConns)
+	connection.SetMaxIdleConns(cfg.MaxIdleConns)
+
+	if err := createTables(connection); err != nil {
+		connection.Close()
+		return nil, err
+	}
+
+	return connection, nil
+}
+
+func createTables(db *sql.DB) error {
 	createUsersTable := `
 		CREATE TABLE IF NOT EXISTS users (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -30,7 +40,7 @@ func createTables() error {
 		)
 	`
 
-	if _, err := DB.Exec(createUsersTable); err != nil {
+	if _, err := db.Exec(createUsersTable); err != nil {
 		return fmt.Errorf("Could not create users table: %v", err)
 	}
 
@@ -46,7 +56,7 @@ func createTables() error {
 		)
 	`
 
-	if _, err := DB.Exec(createEventsTable); err != nil {
+	if _, err := db.Exec(createEventsTable); err != nil {
 		return fmt.Errorf("Could not create events table: %v", err)
 	}
 
@@ -61,7 +71,7 @@ func createTables() error {
 		)
 	`
 
-	if _, err := DB.Exec(createRegistrationsTable); err != nil {
+	if _, err := db.Exec(createRegistrationsTable); err != nil {
 		return fmt.Errorf("Could not create registrations table: %v", err)
 	}
 

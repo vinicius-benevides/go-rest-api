@@ -5,12 +5,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/vinicius-benevides/go-rest-api/src/interface/http/helpers"
-	"github.com/vinicius-benevides/go-rest-api/src/services"
 )
 
-var registrationService = services.NewRegistrationService()
-
-func createRegistration(ctx *gin.Context) {
+func (h *Handler) createRegistration(ctx *gin.Context) {
 	userId := ctx.GetInt64("userId")
 	eventId, err := helpers.GetIDParam(ctx, "id", "event id")
 	if err != nil {
@@ -18,7 +15,7 @@ func createRegistration(ctx *gin.Context) {
 		return
 	}
 
-	if err := registrationService.RegisterUser(eventId, userId); err != nil {
+	if err := h.registrationService.RegisterUser(eventId, userId); err != nil {
 		helpers.RespondError(ctx, err)
 		return
 	}
@@ -28,7 +25,7 @@ func createRegistration(ctx *gin.Context) {
 	})
 }
 
-func cancelRegistration(ctx *gin.Context) {
+func (h *Handler) cancelRegistration(ctx *gin.Context) {
 	userId := ctx.GetInt64("userId")
 	eventId, err := helpers.GetIDParam(ctx, "id", "event id")
 	if err != nil {
@@ -36,7 +33,7 @@ func cancelRegistration(ctx *gin.Context) {
 		return
 	}
 
-	if err := registrationService.CancelRegistration(eventId, userId); err != nil {
+	if err := h.registrationService.CancelRegistration(eventId, userId); err != nil {
 		helpers.RespondError(ctx, err)
 		return
 	}

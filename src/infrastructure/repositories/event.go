@@ -4,14 +4,21 @@ import (
 	"database/sql"
 
 	"github.com/vinicius-benevides/go-rest-api/pkg/errs"
-	"github.com/vinicius-benevides/go-rest-api/src/infrastructure/db"
 	"github.com/vinicius-benevides/go-rest-api/src/models"
 )
 
-func GetAllEvents() ([]models.Event, error) {
+type EventRepository struct {
+	db *sql.DB
+}
+
+func NewEventRepository(db *sql.DB) *EventRepository {
+	return &EventRepository{db: db}
+}
+
+func (r *EventRepository) GetAllEvents() ([]models.Event, error) {
 	query := "SELECT * FROM events"
 
-	rows, err := db.DB.Query(query)
+	rows, err := r.db.Query(query)
 	if err != nil {
 		return nil, errs.InternalError("Could not get events", err)
 	}
@@ -38,9 +45,9 @@ func GetAllEvents() ([]models.Event, error) {
 	return events, nil
 }
 
-func GetEventByID(id int64) (*models.Event, error) {
+func (r *EventRepository) GetEventByID(id int64) (*models.Event, error) {
 	query := "SELECT * FROM events WHERE id = ?"
-	row := db.DB.QueryRow(query, id)
+	row := r.db.QueryRow(query, id)
 
 	var event models.Event
 	if err := row.Scan(
@@ -60,13 +67,13 @@ func GetEventByID(id int64) (*models.Event, error) {
 	return &event, nil
 }
 
-func CreateEvent(event *models.Event) error {
+func (r *EventRepository) CreateEvent(event *models.Event) error {
 	query := `
         INSERT INTO events(name, description, location, dateTime, user_id) 
         VALUES (?, ?, ?, ?, ?)
     `
 
-	stmt, err := db.DB.Prepare(query)
+	stmt, err := r.db.Prepare(query)
 	if err != nil {
 		return errs.InternalError("Could not create event", err)
 	}
@@ -85,14 +92,14 @@ func CreateEvent(event *models.Event) error {
 	return nil
 }
 
-func UpdateEvent(event *models.Event) error {
+func (r *EventRepository) UpdateEvent(event *models.Event) error {
 	query := `
         UPDATE events
         SET name = ?, description = ?, location = ?, dateTime = ? 
         WHERE id = ?
     `
 
-	stmt, err := db.DB.Prepare(query)
+	stmt, err := r.db.Prepare(query)
 	if err != nil {
 		return errs.InternalError("Could not update event", err)
 	}
@@ -105,13 +112,13 @@ func UpdateEvent(event *models.Event) error {
 	return nil
 }
 
-func DeleteEvent(id int64) error {
+func (r *EventRepository) DeleteEvent(id int64) error {
 	query := `
         DELETE FROM events
         WHERE id = ?
     `
 
-	stmt, err := db.DB.Prepare(query)
+	stmt, err := r.db.Prepare(query)
 	if err != nil {
 		return errs.InternalError("Could not delete event", err)
 	}

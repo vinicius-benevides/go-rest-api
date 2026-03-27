@@ -4,21 +4,37 @@ import (
 	"slices"
 
 	"github.com/vinicius-benevides/go-rest-api/pkg/errs"
-	"github.com/vinicius-benevides/go-rest-api/src/infrastructure/repositories"
 )
 
-type RegistrationService struct{}
-
-func NewRegistrationService() *RegistrationService {
-	return &RegistrationService{}
+type RegistrationRepository interface {
+	GetRegistrationsByEvent(eventID int64) ([]int64, error)
+	CreateRegistration(eventID, userID int64) error
+	CancelRegistration(eventID, userID int64) error
 }
 
-func (s *RegistrationService) RegisterUser(eventID, userID int64) error {
-	if _, err := repositories.GetEventByID(eventID); err != nil {
+type RegistrationService interface {
+	RegisterUser(eventID, userID int64) error
+	CancelRegistration(eventID, userID int64) error
+}
+
+type registrationService struct {
+	eventRepo        EventRepository
+	registrationRepo RegistrationRepository
+}
+
+func NewRegistrationService(eventRepo EventRepository, registrationRepo RegistrationRepository) RegistrationService {
+	return &registrationService{
+		eventRepo:        eventRepo,
+		registrationRepo: registrationRepo,
+	}
+}
+
+func (s *registrationService) RegisterUser(eventID, userID int64) error {
+	if _, err := s.eventRepo.GetEventByID(eventID); err != nil {
 		return err
 	}
 
-	users, err := repositories.GetRegistrationsByEvent(eventID)
+	users, err := s.registrationRepo.GetRegistrationsByEvent(eventID)
 	if err != nil {
 		return err
 	}
@@ -27,15 +43,15 @@ func (s *RegistrationService) RegisterUser(eventID, userID int64) error {
 		return errs.ConflictError("User already registered for this event")
 	}
 
-	return repositories.CreateRegistration(eventID, userID)
+	return s.registrationRepo.CreateRegistration(eventID, userID)
 }
 
-func (s *RegistrationService) CancelRegistration(eventID, userID int64) error {
-	if _, err := repositories.GetEventByID(eventID); err != nil {
+func (s *registrationService) CancelRegistration(eventID, userID int64) error {
+	if _, err := s.eventRepo.GetEventByID(eventID); err != nil {
 		return err
 	}
 
-	users, err := repositories.GetRegistrationsByEvent(eventID)
+	users, err := s.registrationRepo.GetRegistrationsByEvent(eventID)
 	if err != nil {
 		return err
 	}
@@ -44,5 +60,5 @@ func (s *RegistrationService) CancelRegistration(eventID, userID int64) error {
 		return errs.NotFoundError("User is not registered for this event")
 	}
 
-	return repositories.CancelRegistration(eventID, userID)
+	return s.registrationRepo.CancelRegistration(eventID, userID)
 }

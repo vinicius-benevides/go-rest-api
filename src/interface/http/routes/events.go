@@ -7,13 +7,10 @@ import (
 	"github.com/vinicius-benevides/go-rest-api/pkg/errs"
 	"github.com/vinicius-benevides/go-rest-api/src/interface/http/helpers"
 	"github.com/vinicius-benevides/go-rest-api/src/models"
-	"github.com/vinicius-benevides/go-rest-api/src/services"
 )
 
-var eventService = services.NewEventService()
-
-func getEvents(ctx *gin.Context) {
-	events, err := eventService.ListEvents()
+func (h *Handler) getEvents(ctx *gin.Context) {
+	events, err := h.eventService.ListEvents()
 	if err != nil {
 		helpers.RespondError(ctx, err)
 		return
@@ -22,14 +19,14 @@ func getEvents(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, events)
 }
 
-func getEventByID(ctx *gin.Context) {
+func (h *Handler) getEventByID(ctx *gin.Context) {
 	eventId, err := helpers.GetIDParam(ctx, "id", "event id")
 	if err != nil {
 		helpers.RespondError(ctx, err)
 		return
 	}
 
-	event, err := eventService.GetEvent(eventId)
+	event, err := h.eventService.GetEvent(eventId)
 	if err != nil {
 		helpers.RespondError(ctx, err)
 		return
@@ -38,7 +35,7 @@ func getEventByID(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, event)
 }
 
-func createEvent(ctx *gin.Context) {
+func (h *Handler) createEvent(ctx *gin.Context) {
 	var event models.Event
 	if err := ctx.ShouldBindJSON(&event); err != nil {
 		helpers.RespondError(ctx, errs.BadRequestError("Invalid event payload"))
@@ -46,7 +43,7 @@ func createEvent(ctx *gin.Context) {
 	}
 
 	userId := ctx.GetInt64("userId")
-	created, err := eventService.CreateEvent(userId, event)
+	created, err := h.eventService.CreateEvent(userId, event)
 	if err != nil {
 		helpers.RespondError(ctx, err)
 		return
@@ -58,7 +55,7 @@ func createEvent(ctx *gin.Context) {
 	})
 }
 
-func updateEvent(ctx *gin.Context) {
+func (h *Handler) updateEvent(ctx *gin.Context) {
 	eventId, err := helpers.GetIDParam(ctx, "id", "event id")
 	if err != nil {
 		helpers.RespondError(ctx, err)
@@ -72,7 +69,7 @@ func updateEvent(ctx *gin.Context) {
 	}
 
 	userId := ctx.GetInt64("userId")
-	event, err := eventService.UpdateEvent(userId, eventId, updatedEvent)
+	event, err := h.eventService.UpdateEvent(userId, eventId, updatedEvent)
 	if err != nil {
 		helpers.RespondError(ctx, err)
 		return
@@ -84,7 +81,7 @@ func updateEvent(ctx *gin.Context) {
 	})
 }
 
-func deleteEvent(ctx *gin.Context) {
+func (h *Handler) deleteEvent(ctx *gin.Context) {
 	eventId, err := helpers.GetIDParam(ctx, "id", "event id")
 	if err != nil {
 		helpers.RespondError(ctx, err)
@@ -92,7 +89,7 @@ func deleteEvent(ctx *gin.Context) {
 	}
 
 	userId := ctx.GetInt64("userId")
-	if err := eventService.DeleteEvent(userId, eventId); err != nil {
+	if err := h.eventService.DeleteEvent(userId, eventId); err != nil {
 		helpers.RespondError(ctx, err)
 		return
 	}

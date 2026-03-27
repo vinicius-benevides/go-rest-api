@@ -2,23 +2,37 @@ package routes
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/vinicius-benevides/go-rest-api/src/interface/http/middlewares"
+	"github.com/vinicius-benevides/go-rest-api/src/services"
 )
 
-func Register(server *gin.Engine) {
-	server.POST("/signup", signup)
-	server.POST("/login", login)
+type Handler struct {
+	eventService        services.EventService
+	registrationService services.RegistrationService
+	userService         services.UserService
+}
 
-	server.GET("/events", getEvents)
-	server.GET("/events/:id", getEventByID)
+func NewHandler(eventService services.EventService, registrationService services.RegistrationService, userService services.UserService) *Handler {
+	return &Handler{
+		eventService:        eventService,
+		registrationService: registrationService,
+		userService:         userService,
+	}
+}
+
+func (h *Handler) Register(server *gin.Engine, authMiddleware gin.HandlerFunc) {
+	server.POST("/signup", h.signup)
+	server.POST("/login", h.login)
+
+	server.GET("/events", h.getEvents)
+	server.GET("/events/:id", h.getEventByID)
 
 	authenticated := server.Group("/")
 
-	authenticated.Use(middlewares.Authenticate)
-	authenticated.POST("/events", createEvent)
-	authenticated.PUT("/events/:id", updateEvent)
-	authenticated.DELETE("/events/:id", deleteEvent)
+	authenticated.Use(authMiddleware)
+	authenticated.POST("/events", h.createEvent)
+	authenticated.PUT("/events/:id", h.updateEvent)
+	authenticated.DELETE("/events/:id", h.deleteEvent)
 
-	authenticated.POST("/events/:id/register", createRegistration)
-	authenticated.DELETE("/events/:id/register", cancelRegistration)
+	authenticated.POST("/events/:id/register", h.createRegistration)
+	authenticated.DELETE("/events/:id/register", h.cancelRegistration)
 }

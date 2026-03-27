@@ -7,19 +7,16 @@ import (
 	"github.com/vinicius-benevides/go-rest-api/pkg/errs"
 	"github.com/vinicius-benevides/go-rest-api/src/interface/http/helpers"
 	"github.com/vinicius-benevides/go-rest-api/src/models"
-	"github.com/vinicius-benevides/go-rest-api/src/services"
 )
 
-var userService = services.NewUserService()
-
-func signup(ctx *gin.Context) {
+func (h *Handler) signup(ctx *gin.Context) {
 	var user models.User
 	if err := ctx.ShouldBindJSON(&user); err != nil {
 		helpers.RespondError(ctx, errs.BadRequestError("Invalid user payload"))
 		return
 	}
 
-	createdUser, err := userService.Signup(user)
+	createdUser, err := h.userService.Signup(user)
 	if err != nil {
 		helpers.RespondError(ctx, err)
 		return
@@ -31,14 +28,14 @@ func signup(ctx *gin.Context) {
 	})
 }
 
-func login(ctx *gin.Context) {
+func (h *Handler) login(ctx *gin.Context) {
 	var user models.User
 	if err := ctx.ShouldBindJSON(&user); err != nil {
 		helpers.RespondError(ctx, errs.BadRequestError("Invalid credentials payload"))
 		return
 	}
 
-	token, err := userService.Login(user.Email, user.Password)
+	token, err := h.userService.Login(user.Email, user.Password)
 	if err != nil {
 		helpers.RespondError(ctx, err)
 		return

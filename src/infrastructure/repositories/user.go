@@ -4,13 +4,20 @@ import (
 	"database/sql"
 
 	"github.com/vinicius-benevides/go-rest-api/pkg/errs"
-	"github.com/vinicius-benevides/go-rest-api/src/infrastructure/db"
 	"github.com/vinicius-benevides/go-rest-api/src/models"
 )
 
-func GetUserByEmail(email string) (*models.User, error) {
+type UserRepository struct {
+	db *sql.DB
+}
+
+func NewUserRepository(db *sql.DB) *UserRepository {
+	return &UserRepository{db: db}
+}
+
+func (r *UserRepository) GetUserByEmail(email string) (*models.User, error) {
 	query := "SELECT * FROM users WHERE email = ?"
-	row := db.DB.QueryRow(query, email)
+	row := r.db.QueryRow(query, email)
 
 	var user models.User
 	if err := row.Scan(
@@ -27,13 +34,13 @@ func GetUserByEmail(email string) (*models.User, error) {
 	return &user, nil
 }
 
-func CreateUser(user *models.User) error {
+func (r *UserRepository) CreateUser(user *models.User) error {
 	query := `
         INSERT INTO users(email, password) 
         VALUES (?, ?)
     `
 
-	stmt, err := db.DB.Prepare(query)
+	stmt, err := r.db.Prepare(query)
 	if err != nil {
 		return errs.InternalError("Could not create user", err)
 	}

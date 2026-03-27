@@ -2,19 +2,31 @@ package services
 
 import (
 	"github.com/vinicius-benevides/go-rest-api/pkg/errs"
-	"github.com/vinicius-benevides/go-rest-api/src/infrastructure/repositories"
 	"github.com/vinicius-benevides/go-rest-api/src/models"
 	"github.com/vinicius-benevides/go-rest-api/utils"
 )
 
-type UserService struct{}
-
-func NewUserService() *UserService {
-	return &UserService{}
+type UserRepository interface {
+	GetUserByEmail(email string) (*models.User, error)
+	CreateUser(user *models.User) error
 }
 
-func (s *UserService) Signup(user models.User) (*models.User, error) {
-	if _, err := repositories.GetUserByEmail(user.Email); err == nil {
+type UserService interface {
+	Signup(user models.User) (*models.User, error)
+	Login(email, password string) (string, error)
+}
+
+type userService struct {
+	repo         UserRepository
+	tokenService TokenService
+}
+
+func NewUserService(repo UserRepository, tokenService TokenService) UserService {
+	return &userService{repo: repo, tokenService: tokenService}
+}
+
+func (s *userService) Signup(user models.User) (*models.User, error) {
+	if _, err := s.repo.GetUserByEmail(user.Email); err == nil {
 		return nil, errs.ConflictError("Email already registered")
 	} else if !errs.Is(err, errs.NotFound) {
 		return nil, err
@@ -26,7 +38,7 @@ func (s *UserService) Signup(user models.User) (*models.User, error) {
 	}
 
 	user.Password = hashed
-	if err := repositories.CreateUser(&user); err != nil {
+	if err := s.repo.CreateUser(&user); err != nil {
 		return nil, err
 	}
 
@@ -34,8 +46,8 @@ func (s *UserService) Signup(user models.User) (*models.User, error) {
 	return &user, nil
 }
 
-func (s *UserService) Login(email, password string) (string, error) {
-	foundUser, err := repositories.GetUserByEmail(email)
+func (s *userService) Login(email, password string) (string, error) {
+	foundUser, err := s.repo.GetUserByEmail(email)
 	if err != nil {
 		if errs.Is(err, errs.NotFound) {
 			return "", errs.UnauthorizedError("Invalid credentials")
@@ -47,7 +59,7 @@ func (s *UserService) Login(email, password string) (string, error) {
 		return "", errs.UnauthorizedError("Invalid credentials")
 	}
 
-	token, err := utils.GenerateToken(foundUser.ID, foundUser.Email)
+	token, err := s.tokenService.GenerateToken(foundUser.ID, foundUser.Email)
 	if err != nil {
 		return "", errs.InternalError("Could not generate authentication token", err)
 	}
