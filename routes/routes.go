@@ -19,5 +19,6 @@ func Register(server *gin.Engine) {
 	authenticated.PUT("/events/:id", updateEvent)
 	authenticated.DELETE("/events/:id", deleteEvent)
 
-	authenticated.POST("/events/:id/register", registerForEvent)
+	authenticated.POST("/events/:id/register", createRegistration)
+	authenticated.DELETE("/events/:id/register", cancelRegistration)
 }

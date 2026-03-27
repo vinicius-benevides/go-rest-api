@@ -168,18 +168,35 @@ func (e *Event) Delete() error {
 	return nil
 }
 
-func (e *Event) Register(userId int64) error {
+func (e *Event) CreateRegistration(userId int64) error {
 	query := "INSERT INTO registrations(event_id, user_id) VALUES (?, ?)"
 
 	stmt, err := db.DB.Prepare(query)
 	if err != nil {
-		return fmt.Errorf("Could not prepare statement for registering for event: %v", err)
+		return fmt.Errorf("Could not prepare statement for creating registration for event: %v", err)
 	}
 	defer stmt.Close()
 
 	_, err = stmt.Exec(e.ID, userId)
 	if err != nil {
-		return fmt.Errorf("Could not execute statement for registering for event: %v", err)
+		return fmt.Errorf("Could not execute statement for creating registration for event: %v", err)
+	}
+
+	return nil
+}
+
+func (e *Event) CancelRegistration(userId int64) error {
+	query := "DELETE FROM registrations WHERE event_id = ? AND user_id = ?"
+
+	stmt, err := db.DB.Prepare(query)
+	if err != nil {
+		return fmt.Errorf("Could not prepare statement for canceling registration for event: %v", err)
+	}
+	defer stmt.Close()
+
+	_, err = stmt.Exec(e.ID, userId)
+	if err != nil {
+		return fmt.Errorf("Could not execute statement for canceling registration for event: %v", err)
 	}
 
 	return nil
