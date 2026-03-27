@@ -1,4 +1,4 @@
-PUT http://localhost:8080/events/2
+PUT http://localhost:8080/events/:id
 Content-Type: application/json
 Authorization: <JWT TOKEN>
 

@@ -50,5 +50,20 @@ func createTables() error {
 		return fmt.Errorf("Could not create events table: %v", err)
 	}
 
+	createRegistrationsTable := `
+		CREATE TABLE IF NOT EXISTS registrations (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			event_id INTEGER,
+			user_id INTEGER,
+			FOREIGN KEY (event_id) REFERENCES events(id),
+			FOREIGN KEY (user_id) REFERENCES users(id),
+			UNIQUE (event_id, user_id)
+		)
+	`
+
+	if _, err := DB.Exec(createRegistrationsTable); err != nil {
+		return fmt.Errorf("Could not create registrations table: %v", err)
+	}
+
 	return nil
 }

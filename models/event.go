@@ -70,6 +70,33 @@ func GetEventByID(id int64) (*Event, error) {
 	return &event, nil
 }
 
+func (e *Event) GetRegistrations() ([]int64, error) {
+	query := "SELECT user_id FROM registrations WHERE event_id = ?"
+
+	rows, err := db.DB.Query(query, e.ID)
+	if err != nil {
+		return nil, fmt.Errorf("Could not get registrations: %v", err)
+	}
+	defer rows.Close()
+
+	var users []int64
+
+	for rows.Next() {
+		var userId int64
+		err = rows.Scan(
+			&userId,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("Could not get all events: %v", err)
+		}
+
+		users = append(users, userId)
+	}
+
+	return users, nil
+
+}
+
 func (e *Event) Save(userId int64) error {
 	e.UserID = userId
 
@@ -136,6 +163,23 @@ func (e *Event) Delete() error {
 	_, err = stmt.Exec(e.ID)
 	if err != nil {
 		return fmt.Errorf("Could not execute statement for deleting event: %v", err)
+	}
+
+	return nil
+}
+
+func (e *Event) Register(userId int64) error {
+	query := "INSERT INTO registrations(event_id, user_id) VALUES (?, ?)"
+
+	stmt, err := db.DB.Prepare(query)
+	if err != nil {
+		return fmt.Errorf("Could not prepare statement for registering for event: %v", err)
+	}
+	defer stmt.Close()
+
+	_, err = stmt.Exec(e.ID, userId)
+	if err != nil {
+		return fmt.Errorf("Could not execute statement for registering for event: %v", err)
 	}
 
 	return nil
