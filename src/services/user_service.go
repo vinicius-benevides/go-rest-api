@@ -1,9 +1,9 @@
 package services
 
 import (
-	"github.com/vinicius-benevides/go-rest-api/models"
 	"github.com/vinicius-benevides/go-rest-api/pkg/errs"
-	"github.com/vinicius-benevides/go-rest-api/repositories"
+	"github.com/vinicius-benevides/go-rest-api/src/infrastructure/repositories"
+	"github.com/vinicius-benevides/go-rest-api/src/models"
 	"github.com/vinicius-benevides/go-rest-api/utils"
 )
 

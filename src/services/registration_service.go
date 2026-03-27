@@ -4,7 +4,7 @@ import (
 	"slices"
 
 	"github.com/vinicius-benevides/go-rest-api/pkg/errs"
-	"github.com/vinicius-benevides/go-rest-api/repositories"
+	"github.com/vinicius-benevides/go-rest-api/src/infrastructure/repositories"
 )
 
 type RegistrationService struct{}

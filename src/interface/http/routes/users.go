@@ -4,9 +4,10 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/vinicius-benevides/go-rest-api/models"
 	"github.com/vinicius-benevides/go-rest-api/pkg/errs"
-	"github.com/vinicius-benevides/go-rest-api/services"
+	"github.com/vinicius-benevides/go-rest-api/src/interface/http/helpers"
+	"github.com/vinicius-benevides/go-rest-api/src/models"
+	"github.com/vinicius-benevides/go-rest-api/src/services"
 )
 
 var userService = services.NewUserService()
@@ -14,13 +15,13 @@ var userService = services.NewUserService()
 func signup(ctx *gin.Context) {
 	var user models.User
 	if err := ctx.ShouldBindJSON(&user); err != nil {
-		respondError(ctx, errs.BadRequestError("Invalid user payload"))
+		helpers.RespondError(ctx, errs.BadRequestError("Invalid user payload"))
 		return
 	}
 
 	createdUser, err := userService.Signup(user)
 	if err != nil {
-		respondError(ctx, err)
+		helpers.RespondError(ctx, err)
 		return
 	}
 
@@ -33,13 +34,13 @@ func signup(ctx *gin.Context) {
 func login(ctx *gin.Context) {
 	var user models.User
 	if err := ctx.ShouldBindJSON(&user); err != nil {
-		respondError(ctx, errs.BadRequestError("Invalid credentials payload"))
+		helpers.RespondError(ctx, errs.BadRequestError("Invalid credentials payload"))
 		return
 	}
 
 	token, err := userService.Login(user.Email, user.Password)
 	if err != nil {
-		respondError(ctx, err)
+		helpers.RespondError(ctx, err)
 		return
 	}
 

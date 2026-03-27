@@ -3,9 +3,9 @@ package repositories
 import (
 	"database/sql"
 
-	"github.com/vinicius-benevides/go-rest-api/db"
-	"github.com/vinicius-benevides/go-rest-api/models"
 	"github.com/vinicius-benevides/go-rest-api/pkg/errs"
+	"github.com/vinicius-benevides/go-rest-api/src/infrastructure/db"
+	"github.com/vinicius-benevides/go-rest-api/src/models"
 )
 
 func GetUserByEmail(email string) (*models.User, error) {

@@ -1,4 +1,4 @@
-package routes
+package helpers
 
 import (
 	"errors"
@@ -8,7 +8,7 @@ import (
 	"github.com/vinicius-benevides/go-rest-api/pkg/errs"
 )
 
-func respondError(ctx *gin.Context, err error) {
+func RespondError(ctx *gin.Context, err error) {
 	status := http.StatusInternalServerError
 	message := "Internal server error"
 

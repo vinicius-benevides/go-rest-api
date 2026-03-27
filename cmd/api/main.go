@@ -2,8 +2,8 @@ package main
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/vinicius-benevides/go-rest-api/db"
-	"github.com/vinicius-benevides/go-rest-api/routes"
+	"github.com/vinicius-benevides/go-rest-api/src/infrastructure/db"
+	"github.com/vinicius-benevides/go-rest-api/src/interface/http/routes"
 )
 
 func main() {

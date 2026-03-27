@@ -1,8 +1,8 @@
 package repositories
 
 import (
-	"github.com/vinicius-benevides/go-rest-api/db"
 	"github.com/vinicius-benevides/go-rest-api/pkg/errs"
+	"github.com/vinicius-benevides/go-rest-api/src/infrastructure/db"
 )
 
 func GetRegistrationsByEvent(eventID int64) ([]int64, error) {
