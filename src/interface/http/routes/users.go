@@ -5,8 +5,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/vinicius-benevides/go-rest-api/pkg/errs"
+	"github.com/vinicius-benevides/go-rest-api/src/domain/models"
 	"github.com/vinicius-benevides/go-rest-api/src/interface/http/helpers"
-	"github.com/vinicius-benevides/go-rest-api/src/models"
 )
 
 func (h *Handler) signup(ctx *gin.Context) {

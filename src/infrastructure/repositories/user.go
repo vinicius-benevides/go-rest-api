@@ -4,7 +4,7 @@ import (
 	"database/sql"
 
 	"github.com/vinicius-benevides/go-rest-api/pkg/errs"
-	"github.com/vinicius-benevides/go-rest-api/src/models"
+	"github.com/vinicius-benevides/go-rest-api/src/domain/models"
 )
 
 type UserRepository struct {

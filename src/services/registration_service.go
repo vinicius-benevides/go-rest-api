@@ -4,13 +4,8 @@ import (
 	"slices"
 
 	"github.com/vinicius-benevides/go-rest-api/pkg/errs"
+	"github.com/vinicius-benevides/go-rest-api/src/domain/ports"
 )
-
-type RegistrationRepository interface {
-	GetRegistrationsByEvent(eventID int64) ([]int64, error)
-	CreateRegistration(eventID, userID int64) error
-	CancelRegistration(eventID, userID int64) error
-}
 
 type RegistrationService interface {
 	RegisterUser(eventID, userID int64) error
@@ -18,11 +13,11 @@ type RegistrationService interface {
 }
 
 type registrationService struct {
-	eventRepo        EventRepository
-	registrationRepo RegistrationRepository
+	eventRepo        ports.EventRepository
+	registrationRepo ports.RegistrationRepository
 }
 
-func NewRegistrationService(eventRepo EventRepository, registrationRepo RegistrationRepository) RegistrationService {
+func NewRegistrationService(eventRepo ports.EventRepository, registrationRepo ports.RegistrationRepository) RegistrationService {
 	return &registrationService{
 		eventRepo:        eventRepo,
 		registrationRepo: registrationRepo,

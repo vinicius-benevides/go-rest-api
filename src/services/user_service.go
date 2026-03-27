@@ -1,15 +1,11 @@
 package services
 
 import (
+	"github.com/vinicius-benevides/go-rest-api/pkg/crypto"
 	"github.com/vinicius-benevides/go-rest-api/pkg/errs"
-	"github.com/vinicius-benevides/go-rest-api/src/models"
-	"github.com/vinicius-benevides/go-rest-api/utils"
+	"github.com/vinicius-benevides/go-rest-api/src/domain/models"
+	"github.com/vinicius-benevides/go-rest-api/src/domain/ports"
 )
-
-type UserRepository interface {
-	GetUserByEmail(email string) (*models.User, error)
-	CreateUser(user *models.User) error
-}
 
 type UserService interface {
 	Signup(user models.User) (*models.User, error)
@@ -17,11 +13,11 @@ type UserService interface {
 }
 
 type userService struct {
-	repo         UserRepository
+	repo         ports.UserRepository
 	tokenService TokenService
 }
 
-func NewUserService(repo UserRepository, tokenService TokenService) UserService {
+func NewUserService(repo ports.UserRepository, tokenService TokenService) UserService {
 	return &userService{repo: repo, tokenService: tokenService}
 }
 
@@ -32,7 +28,7 @@ func (s *userService) Signup(user models.User) (*models.User, error) {
 		return nil, err
 	}
 
-	hashed, err := utils.HashPassword(user.Password)
+	hashed, err := crypto.HashPassword(user.Password)
 	if err != nil {
 		return nil, errs.InternalError("Could not process user data", err)
 	}
@@ -55,7 +51,7 @@ func (s *userService) Login(email, password string) (string, error) {
 		return "", err
 	}
 
-	if !utils.CheckPasswordHash(password, foundUser.Password) {
+	if !crypto.CheckPasswordHash(password, foundUser.Password) {
 		return "", errs.UnauthorizedError("Invalid credentials")
 	}
 

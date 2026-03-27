@@ -2,16 +2,9 @@ package services
 
 import (
 	"github.com/vinicius-benevides/go-rest-api/pkg/errs"
-	"github.com/vinicius-benevides/go-rest-api/src/models"
+	"github.com/vinicius-benevides/go-rest-api/src/domain/models"
+	"github.com/vinicius-benevides/go-rest-api/src/domain/ports"
 )
-
-type EventRepository interface {
-	GetAllEvents() ([]models.Event, error)
-	GetEventByID(id int64) (*models.Event, error)
-	CreateEvent(event *models.Event) error
-	UpdateEvent(event *models.Event) error
-	DeleteEvent(id int64) error
-}
 
 type EventService interface {
 	ListEvents() ([]models.Event, error)
@@ -22,10 +15,10 @@ type EventService interface {
 }
 
 type eventService struct {
-	repo EventRepository
+	repo ports.EventRepository
 }
 
-func NewEventService(repo EventRepository) EventService {
+func NewEventService(repo ports.EventRepository) EventService {
 	return &eventService{repo: repo}
 }
 
