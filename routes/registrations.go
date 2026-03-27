@@ -7,7 +7,7 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
-	"github.com/vinicius-benevides/go-rest-api/models"
+	"github.com/vinicius-benevides/go-rest-api/repositories"
 )
 
 func createRegistration(ctx *gin.Context) {
@@ -20,7 +20,7 @@ func createRegistration(ctx *gin.Context) {
 		return
 	}
 
-	event, err := models.GetEventByID(eventId)
+	event, err := repositories.GetEventByID(eventId)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"message": fmt.Sprintf("Could not get event: %v", err),
@@ -35,7 +35,7 @@ func createRegistration(ctx *gin.Context) {
 		return
 	}
 
-	users, err := event.GetRegistrations()
+	users, err := repositories.GetRegistrationsByEvent(event.ID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"message": fmt.Sprintf("Could not get current registrations: %v", err),
@@ -50,7 +50,7 @@ func createRegistration(ctx *gin.Context) {
 		return
 	}
 
-	if err := event.CreateRegistration(userId); err != nil {
+	if err := repositories.CreateRegistration(event.ID, userId); err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"message": fmt.Sprintf("Could not register for event: %v", err),
 		})
@@ -72,7 +72,7 @@ func cancelRegistration(ctx *gin.Context) {
 		return
 	}
 
-	event, err := models.GetEventByID(eventId)
+	event, err := repositories.GetEventByID(eventId)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"message": fmt.Sprintf("Could not get event: %v", err),
@@ -87,7 +87,7 @@ func cancelRegistration(ctx *gin.Context) {
 		return
 	}
 
-	users, err := event.GetRegistrations()
+	users, err := repositories.GetRegistrationsByEvent(event.ID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"message": fmt.Sprintf("Could not get current registrations: %v", err),
@@ -102,7 +102,7 @@ func cancelRegistration(ctx *gin.Context) {
 		return
 	}
 
-	if err := event.CancelRegistration(userId); err != nil {
+	if err := repositories.CancelRegistration(event.ID, userId); err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"message": fmt.Sprintf("Could not cancel registration for event: %v", err),
 		})

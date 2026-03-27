@@ -6,6 +6,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/vinicius-benevides/go-rest-api/models"
+	"github.com/vinicius-benevides/go-rest-api/repositories"
+	"github.com/vinicius-benevides/go-rest-api/utils"
 )
 
 func signup(ctx *gin.Context) {
@@ -17,7 +19,7 @@ func signup(ctx *gin.Context) {
 		return
 	}
 
-	if existingUser, err := models.GetUserByEmail(user.Email); err != nil {
+	if existingUser, err := repositories.GetUserByEmail(user.Email); err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"message": fmt.Sprintf("Could not verify user: %v", err),
 		})
@@ -29,7 +31,7 @@ func signup(ctx *gin.Context) {
 		return
 	}
 
-	if err := user.Save(); err != nil {
+	if err := repositories.CreateUser(&user); err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"message": fmt.Sprintf("Could not create user: %v", err),
 		})
@@ -51,9 +53,24 @@ func login(ctx *gin.Context) {
 		return
 	}
 
-	token, err := user.Login()
+	foundUser, err := repositories.GetUserByEmail(user.Email)
 	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"message": fmt.Sprintf("Could not authenticate user: %v", err),
+		})
+		return
+	}
+
+	if foundUser == nil || !utils.CheckPasswordHash(user.Password, foundUser.Password) {
 		ctx.JSON(http.StatusUnauthorized, gin.H{
+			"message": "Invalid credentials",
+		})
+		return
+	}
+
+	token, err := utils.GenerateToken(foundUser.ID, foundUser.Email)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"message": fmt.Sprintf("Could not authenticate user: %v", err),
 		})
 		return

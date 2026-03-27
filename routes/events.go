@@ -7,10 +7,11 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/vinicius-benevides/go-rest-api/models"
+	"github.com/vinicius-benevides/go-rest-api/repositories"
 )
 
 func getEvents(ctx *gin.Context) {
-	events, err := models.GetAllEvents()
+	events, err := repositories.GetAllEvents()
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"message": fmt.Sprintf("Could not get events: %v", err),
@@ -30,7 +31,7 @@ func getEventByID(ctx *gin.Context) {
 		return
 	}
 
-	event, err := models.GetEventByID(eventId)
+	event, err := repositories.GetEventByID(eventId)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"message": fmt.Sprintf("Could not get event: %v", err),
@@ -58,7 +59,8 @@ func createEvent(ctx *gin.Context) {
 	}
 
 	userId := ctx.GetInt64("userId")
-	if err := event.Save(userId); err != nil {
+	event.UserID = userId
+	if err := repositories.CreateEvent(&event); err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"message": fmt.Sprintf("Could not create event: %v", err),
 		})
@@ -80,7 +82,7 @@ func updateEvent(ctx *gin.Context) {
 		return
 	}
 
-	event, err := models.GetEventByID(eventId)
+	event, err := repositories.GetEventByID(eventId)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"message": fmt.Sprintf("Could not get event: %v", err),
@@ -111,7 +113,9 @@ func updateEvent(ctx *gin.Context) {
 		return
 	}
 
-	if err := updatedEvent.Update(eventId, userId); err != nil {
+	updatedEvent.ID = eventId
+	updatedEvent.UserID = userId
+	if err := repositories.UpdateEvent(&updatedEvent); err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"message": fmt.Sprintf("Could not update event: %v", err),
 		})
@@ -133,7 +137,7 @@ func deleteEvent(ctx *gin.Context) {
 		return
 	}
 
-	event, err := models.GetEventByID(eventId)
+	event, err := repositories.GetEventByID(eventId)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"message": fmt.Sprintf("Could not get event: %v", err),
@@ -156,7 +160,7 @@ func deleteEvent(ctx *gin.Context) {
 		return
 	}
 
-	if err := event.Delete(); err != nil {
+	if err := repositories.DeleteEvent(event.ID); err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"message": fmt.Sprintf("Could not delete event: %v", err),
 		})
